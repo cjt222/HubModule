@@ -3,25 +3,27 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from collections import OrderedDict
+
 import paddle.fluid as fluid
 import paddlehub as hub
-
-from collections import OrderedDict
-from .data_feed import reader, DecodeImage, ResizeImage, NormalizeImage, Permute
-from .processor import load_label_info, postprocess
-from .multi_box_head import MultiBoxHead
-from .output_decoder import SSDOutputDecoder
 from paddlehub.module.module import moduleinfo
+
+from ssd.data_feed import reader, DecodeImage, ResizeImage, NormalizeImage, Permute
+from ssd.processor import load_label_info, postprocess
+from ssd.multi_box_head import MultiBoxHead
+from ssd.output_decoder import SSDOutputDecoder
 
 
 @moduleinfo(
     name="ssd",
     version="1.0.0",
     type="cv/object_detection",
-    summary="Single Shot Detection.",
-    author="paddle",
-    author_email="paddlepaddle@baidu.com")
-class HubModule(hub.Module):
+    summary=
+    "SSD (Single Shot MultiBox Detector) is a object detection model, which trained with PASCAL VOC dataset.",
+    author="paddlepaddle",
+    author_email="paddle-dev@baidu.com")
+class SSD(hub.Module):
     def _initialize(self):
         self.reader = reader
         self.load_label_info = load_label_info
@@ -43,8 +45,8 @@ class HubModule(hub.Module):
                 get_prediction=False):
         """Distill the Head Features, so as to perform transfer learning.
 
-        :param backbone: backbone of SSD, optional choices: MobileNet_V1, VGG16
-        :type backbone: <class 'backbone' object>
+        :param body_feats: feature mps of backbone outputs
+        :type body_feats: list
         :param multi_box_head: SSD head of MultiBoxHead.
         :type multi_box_head: <class 'MultiBoxHead' object>
         :param ssd_output_decoder: SSD output decoder
@@ -62,11 +64,6 @@ class HubModule(hub.Module):
         """
         context_prog = image.block.program
         with fluid.program_guard(context_prog):
-            #            body_feats = backbone(input=image)
-            #            if isinstance(body_feats, OrderedDict):
-            #                body_feat_names = list(body_feats.keys())
-            #                body_feats = [body_feats[name] for name in body_feat_names]
-
             inputs = {'image': image}
             if not get_prediction:
                 outputs = {'body_feats': body_feats}

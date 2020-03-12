@@ -1,7 +1,8 @@
 # coding=utf-8
 import os
-import cv2
 import unittest
+
+import cv2
 import numpy as np
 import paddle.fluid as fluid
 import paddlehub as hub
@@ -40,7 +41,7 @@ class TestSSDVGG(unittest.TestCase):
 
     def test_object_detection(self):
         with fluid.program_guard(self.test_prog):
-            image_dir = '../../images/'
+            image_dir = '../../image_dataset/'
             zebra = cv2.imread(os.path.join(image_dir,
                                             'zebra.jpg')).astype('float32')
             zebra = np.array([zebra, zebra])

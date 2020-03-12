@@ -3,11 +3,12 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
-import cv2
 import os
-import numpy as np
 import random
 from collections import OrderedDict
+
+import cv2
+import numpy as np
 from PIL import Image, ImageEnhance
 from paddle import fluid
 
@@ -63,7 +64,7 @@ class ResizeImage(object):
         if not isinstance(im, np.ndarray):
             raise TypeError("{}: image type is not numpy.".format(self))
         if len(im.shape) != 3:
-            raise ImageError('{}: image is not 3-dimensional.'.format(self))
+            raise ValueError('{}: image is not 3-dimensional.'.format(self))
         im_shape = im.shape
         im_size_min = np.min(im_shape[0:2])
         im_size_max = np.max(im_shape[0:2])

@@ -4,22 +4,21 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+from functools import partial
+
 import numpy as np
 import paddle.fluid as fluid
 import paddlehub as hub
-
-from functools import partial
-from .vgg import VGG
 from paddlehub.module.module import moduleinfo
 
 
 @moduleinfo(
     name="ssd_vgg16_512_coco2017",
-    version="1.0.0",
+    version="1.1.0",
     type="cv/object_detection",
     summary="SSD with backbone VGG16, trained with dataset COCO.",
-    author="paddle",
-    author_email="paddlepaddle@baidu.com")
+    author="paddlepaddle",
+    author_email="paddle-dev@baidu.com")
 class HubModule(hub.Module):
     def _initialize(self):
         self.ssd = hub.Module(name="ssd")
@@ -61,13 +60,14 @@ class HubModule(hub.Module):
         """
         wrapped_prog = input_image.block.program if input_image else fluid.Program(
         )
-        with fluid.program_guard(wrapped_prog):
+        startup_program = fluid.Program()
+        with fluid.program_guard(wrapped_prog, startup_program):
             with fluid.unique_name.guard():
                 # image
                 image = input_image if input_image else fluid.layers.data(
                     name='image', shape=[3, 512, 512], dtype='float32')
                 # backbone
-                vgg = hub.Module(name='vgg16')
+                vgg = hub.Module(name='vgg16_imagenet')
                 _, _outputs, _ = vgg.context(
                     input_image=image,
                     normalizations=[20., -1, -1, -1, -1, -1, -1],
@@ -116,9 +116,8 @@ class HubModule(hub.Module):
                     param_prefix=param_prefix,
                     get_prediction=get_prediction)
 
-            place = fluid.CPUPlace()
-            exe = fluid.Executor(place)
-            with fluid.program_guard(context_prog):
+                place = fluid.CPUPlace()
+                exe = fluid.Executor(place)
                 if pretrained:
 
                     def _if_exist(var):
@@ -137,6 +136,8 @@ class HubModule(hub.Module):
                             exe,
                             self.default_pretrained_model_path,
                             predicate=_if_exist)
+                else:
+                    exe.run(startup_program)
                 return inputs, outputs, context_prog
 
     def object_detection(self,
